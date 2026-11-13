@@ -1,0 +1,7 @@
+package com.lms.memberservice.exception;
+
+public class ContactAlreadyExistsException extends RuntimeException {
+    public ContactAlreadyExistsException(String message) {
+        super(message);
+    }
+}
