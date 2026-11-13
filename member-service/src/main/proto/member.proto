@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.lms.memberservice.grpc";
+option java_outer_classname = "MemberServiceProto";
+
+service MemberGrpcService {
+
+  rpc GetMemberById (GetMemberByIdRequest) returns (MemberResponse);
+
+  rpc GetMemberByEmail (GetMemberByEmailRequest) returns (MemberResponse);
+}
+
+message GetMemberByIdRequest {
+  int64 member_id = 1;
+}
+
+message GetMemberByEmailRequest {
+  string email = 1;
+}
+
+message MemberResponse {
+  int64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string contact = 5;
+  string member_number = 6;
+  bool status = 7;
+}
