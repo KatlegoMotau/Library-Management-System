@@ -85,6 +85,17 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
+
+    // Get the authenticated member's own profile
+    @GetMapping("/me")
+    public ResponseEntity<MemberResponseDTO> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+
+        MemberResponseDTO response = memberService.getMemberByEmail(jwt.getSubject());
+
+        return ResponseEntity.ok(response);
+    }
+
+
     @PutMapping("/update/{id}")
     public ResponseEntity<MemberResponseDTO> updateMember(@PathVariable Long id, @Valid @RequestBody MemberRequestDTO dto, @AuthenticationPrincipal Jwt jwt) {
 

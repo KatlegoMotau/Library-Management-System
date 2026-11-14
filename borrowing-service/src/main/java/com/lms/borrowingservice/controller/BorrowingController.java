@@ -46,6 +46,11 @@ public class BorrowingController {
             MemberResponseDTO member = getAuthenticatedMember(jwt);
 
             requestDTO.setMemberId(member.getId());
+
+            if(requestDTO.getMemberId() == null || requestDTO.getMemberId() <= 0)
+            {
+                throw new IllegalArgumentException("Invalid member ID");
+            }
         }
 
         BorrowingResponseDTO responseDTO = borrowingService.borrowBook(requestDTO, jwt.getTokenValue());
