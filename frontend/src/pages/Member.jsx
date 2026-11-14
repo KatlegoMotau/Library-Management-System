@@ -1,69 +1,157 @@
+import { useState, useEffect } from "react";
+
+import { getMyProfile } from "../services/memberService";
+import { getMemberBorrowings } from "../services/borrowingService";
+import { getBookById } from "../services/bookService";
 
 function Member() {
 
-    // Temporary member information
-    const member = {
-        firstName: "John",
-        lastName: "Smith",
-        email: "john@example.com",
-        contact: "0712345678",
-        memberNumber: "MEM001",
-        status: "ACTIVE"
-    };
+    // Stores the authenticated member's profile
+    const [member, setMember] = useState(null);
 
-    // Temporary borrowing statistics
+    // Tracks whether the profile is loading
+    const [loading, setLoading] = useState(true);
+
+    // Stores profile errors
+    const [error, setError] = useState("");
+
+    // Stores the member's borrowing history
+    const [borrowings, setBorrowings] = useState([]);
+
+    // Stores borrowing history errors
+    const [borrowingsError, setBorrowingsError] = useState("");
+
+    // Stores book details retrieved from the Book Service
+    const [bookDetails, setBookDetails] = useState({});
+
+    // Retrieve the authenticated member's profile and borrowing history
+    useEffect(() => {
+
+        async function loadMemberProfile() {
+
+            try {
+                setLoading(true);
+                setError("");
+
+                // Retrieve the authenticated member's profile
+                const memberData = await getMyProfile();
+                setMember(memberData);
+
+                // Retrieve the member's borrowing history
+                try {
+                    const borrowingData = await getMemberBorrowings(memberData.id);
+
+                    // Store the borrowing records
+                    setBorrowings(borrowingData);
+
+                    // Retrieve details for each borrowed book
+                    const bookPromises = borrowingData.map(async (borrowing) => {
+
+                        try {
+                            const bookData = await getBookById(borrowing.bookId);
+
+                            return {
+                                bookId: borrowing.bookId,
+                                title: bookData.title,
+                                author: bookData.author
+                            };
+
+                        } catch (error) {
+                            console.error(
+                                `Unable to retrieve book ${borrowing.bookId}:`,
+                                error
+                            );
+
+                            return {
+                                bookId: borrowing.bookId,
+                                title: `Book ID: ${borrowing.bookId}`,
+                                author: "Book details unavailable"
+                            };
+                        }
+
+                    });
+
+                    // Wait until all book details have been retrieved
+                    const books = await Promise.all(bookPromises);
+
+                    // Convert the results into an object indexed by book ID
+                    const booksMap = {};
+
+                    books.forEach((book) => {
+                        booksMap[book.bookId] = book;
+                    });
+
+                    setBookDetails(booksMap);
+
+                } catch (error) {
+                    setBorrowingsError(error.message);
+                }
+
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+
+        }
+
+        loadMemberProfile();
+
+    }, []);
+
+    // Display loading message while retrieving the profile
+    if (loading) {
+        return (
+            <div className="p-6">
+                <p className="text-gray-500">
+                    Loading your profile...
+                </p>
+            </div>
+        );
+    }
+
+    // Display an error if the profile could not be retrieved
+    if (error) {
+        return (
+            <div className="p-6">
+                <p className="text-red-600">
+                    Unable to load your profile: {error}
+                </p>
+            </div>
+        );
+    }
+
+    // Handle an empty profile response
+    if (!member) {
+        return (
+            <div className="p-6">
+                <p className="text-gray-500">
+                    No member profile found.
+                </p>
+            </div>
+        );
+    }
+
+    // Calculate borrowing statistics from actual backend records
     const statistics = [
         {
             title: "Total Borrowings",
-            value: 12,
+            value: borrowings.length,
             description: "All borrowing records"
         },
         {
             title: "Active Borrowings",
-            value: 3,
+            value: borrowings.filter(
+                (borrowing) => borrowing.status === "BORROWED"
+            ).length,
             description: "Books currently borrowed"
         },
         {
             title: "Returned Books",
-            value: 9,
+            value: borrowings.filter(
+                (borrowing) => borrowing.status === "RETURNED"
+            ).length,
             description: "Books successfully returned"
-        }
-    ];
-
-
-// Temporary borrowing records
-    const borrowings = [
-        {
-            id: 1,
-            book: "Clean Code",
-            borrowDate: "2026-11-10",
-            dueDate: "2026-11-20",
-            returnDate: "-",
-            status: "ACTIVE"
-        },
-        {
-            id: 2,
-            book: "Effective Java",
-            borrowDate: "2026-11-05",
-            dueDate: "2026-11-15",
-            returnDate: "-",
-            status: "OVERDUE"
-        },
-        {
-            id: 3,
-            book: "The Pragmatic Programmer",
-            borrowDate: "2026-10-20",
-            dueDate: "2026-10-30",
-            returnDate: "2026-10-28",
-            status: "RETURNED"
-        },
-        {
-            id: 4,
-            book: "Introduction to Algorithms",
-            borrowDate: "2026-10-15",
-            dueDate: "2026-10-25",
-            returnDate: "2026-10-24",
-            status: "RETURNED"
         }
     ];
 
@@ -97,7 +185,7 @@ function Member() {
                     </div>
 
                     <span className="w-fit px-4 py-2 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
-                        {member.status}
+                        {member.status ? "ACTIVE" : "INACTIVE"}
                     </span>
 
                 </div>
@@ -156,7 +244,6 @@ function Member() {
 
             </div>
 
-
             {/* My Borrowings */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
 
@@ -206,43 +293,77 @@ function Member() {
 
                         <tbody className="divide-y divide-gray-100">
 
-                        {borrowings.map((borrowing) => (
+                        {borrowingsError ? (
 
-                            <tr key={borrowing.id}>
-
-                                <td className="px-6 py-4 text-sm font-medium text-black whitespace-nowrap">
-                                    {borrowing.book}
+                            <tr>
+                                <td
+                                    colSpan="5"
+                                    className="px-6 py-8 text-center text-red-600 text-sm"
+                                >
+                                    Unable to load borrowing history: {borrowingsError}
                                 </td>
-
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {borrowing.borrowDate}
-                                </td>
-
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {borrowing.dueDate}
-                                </td>
-
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {borrowing.returnDate}
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap">
-
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                borrowing.status === "ACTIVE"
-                                    ? "bg-gray-100 text-gray-700"
-                                    : borrowing.status === "OVERDUE"
-                                        ? "bg-black text-white"
-                                        : "bg-gray-200 text-gray-500"
-                            }`}>
-                                {borrowing.status}
-                            </span>
-
-                                </td>
-
                             </tr>
 
-                        ))}
+                        ) : borrowings.length === 0 ? (
+
+                            <tr>
+                                <td
+                                    colSpan="5"
+                                    className="px-6 py-8 text-center text-gray-500 text-sm"
+                                >
+                                    You have no borrowing records yet.
+                                </td>
+                            </tr>
+
+                        ) : (
+
+                            borrowings.map((borrowing) => (
+
+                                <tr key={borrowing.id}>
+
+                                    <td className="px-6 py-4 text-sm text-black whitespace-nowrap">
+
+                                        <p className="font-medium">
+                                            {bookDetails[borrowing.bookId]?.title || `Book ID: ${borrowing.bookId}`}
+                                        </p>
+
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {bookDetails[borrowing.bookId]?.author || "Loading book details..."}
+                                        </p>
+
+                                    </td>
+
+                                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                        {borrowing.borrowingDate}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                        {borrowing.dueDate}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                        {borrowing.returnDate || "-"}
+                                    </td>
+
+                                    <td className="px-6 py-4 whitespace-nowrap">
+
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                borrowing.status === "BORROWED"
+                                                    ? "bg-gray-100 text-gray-700"
+                                                    : borrowing.status === "OVERDUE"
+                                                        ? "bg-black text-white"
+                                                        : "bg-gray-200 text-gray-500"
+                                            }`}>
+                                                {borrowing.status}
+                                            </span>
+
+                                    </td>
+
+                                </tr>
+
+                            ))
+
+                        )}
 
                         </tbody>
 

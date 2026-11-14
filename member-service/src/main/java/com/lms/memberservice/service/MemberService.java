@@ -106,16 +106,19 @@ public class MemberService {
         return MemberMapper.toDTO(savedMember);
     }
 
-    // Get all members
+
+    // Get all registered members, excluding admin accounts
     public List<MemberResponseDTO> getMembers() {
 
         List<Member> members = memberRepository.findAll();
 
         List<MemberResponseDTO> memberResponseDTOs = members.stream()
+                .filter(member -> member.getRole() == Role.MEMBER)
                 .map(member -> MemberMapper.toDTO(member)).toList();
 
         return memberResponseDTOs;
     }
+
 
     // Get a member by ID
     public MemberResponseDTO getMemberById(Long id) {

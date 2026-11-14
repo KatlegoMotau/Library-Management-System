@@ -39,7 +39,7 @@ function App() {
                 <Route
                     path="/member"
                     element={
-                        <RoleBasedRoute allowedRoles={["ADMIN"]}>
+                        <RoleBasedRoute allowedRoles={["ADMIN", "MEMBER"]}>
                             <Member />
                         </RoleBasedRoute>
                     }

@@ -23,9 +23,13 @@ function Sidebar({ role }) {
         {
             name: "Admin",
             path: "/admin"
-        },
+        }
+    ];
+
+    // Additional links available to members
+    const memberLinks = [
         {
-            name: "Members",
+            name: "My Account",
             path: "/member"
         }
     ];
@@ -46,10 +50,12 @@ function Sidebar({ role }) {
 
     }
 
-    // Add administrator links when the role is ADMIN
+    // Display navigation links based on the user's role
     const navigationLinks = role === "ADMIN"
         ? [...commonLinks, ...adminLinks]
-        : commonLinks;
+        : role === "MEMBER"
+            ? [...commonLinks, ...memberLinks]
+            : commonLinks;
 
     return (
         <>

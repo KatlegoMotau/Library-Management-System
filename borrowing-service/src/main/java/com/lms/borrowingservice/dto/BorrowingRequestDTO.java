@@ -1,4 +1,3 @@
-
 package com.lms.borrowingservice.dto;
 
 import jakarta.validation.constraints.NotNull;
@@ -6,8 +5,6 @@ import jakarta.validation.constraints.Positive;
 
 public class BorrowingRequestDTO {
 
-    @NotNull(message = "Member ID is required")
-    @Positive(message = "Member ID must be a positive number")
     private Long memberId;
 
     @NotNull(message = "Book ID is required")
