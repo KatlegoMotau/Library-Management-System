@@ -35,10 +35,4 @@ async function activateMember(id) {
     });
 }
 
-export {
-    getMyProfile,
-    getMemberById,
-    getMembers,
-    deactivateMember,
-    activateMember
-};
+export {getMyProfile, getMemberById, getMembers, deactivateMember, activateMember};

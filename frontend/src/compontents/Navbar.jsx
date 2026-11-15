@@ -1,8 +1,4 @@
-function Navbar({
-                    userName = "Guest User",
-                    role = "MEMBER",
-                    onMenuClick
-                }) {
+function Navbar({userName = "Guest User", role = "MEMBER", onMenuClick}) {
 
     // Get the first letter of the user's name
     const userInitial = userName.charAt(0).toUpperCase();

@@ -8,12 +8,13 @@ function getTokenPayload() {
 
     const token = getToken();
 
-    if (!token) {
+    if(!token)
+    {
         return null;
     }
 
-    try {
-
+    try
+    {
         // JWT contains three parts separated by dots
         const tokenParts = token.split(".");
 
@@ -26,13 +27,12 @@ function getTokenPayload() {
             .replace(/_/g, "/");
 
         return JSON.parse(atob(base64));
-
-    } catch (error) {
-
+    }
+    catch(error)
+    {
         console.error("Unable to decode JWT:", error);
 
         return null;
-
     }
 
 }
@@ -42,7 +42,8 @@ function isAuthenticated() {
 
     const payload = getTokenPayload();
 
-    if (!payload || !payload.exp) {
+    if(!payload || !payload.exp)
+    {
         return false;
     }
 
@@ -61,9 +62,4 @@ function getUserRole() {
 
 }
 
-export {
-    getToken,
-    getTokenPayload,
-    isAuthenticated,
-    getUserRole
-};
+export {getToken, getTokenPayload, isAuthenticated, getUserRole};

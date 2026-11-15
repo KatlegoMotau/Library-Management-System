@@ -1,12 +1,13 @@
 import { apiRequest } from "./api";
 
-// Borrow a book
-async function borrowBook(bookId) {
+// Borrow a book with a selected due date
+async function borrowBook(bookId, dueDate) {
 
     return await apiRequest("/api/borrowings/borrow", {
         method: "POST",
         body: JSON.stringify({
-            bookId: bookId
+            bookId: bookId,
+            dueDate: dueDate
         })
     });
 
@@ -21,7 +22,7 @@ async function returnBook(borrowingId) {
 
 }
 
-// Retrieve all borrowing records
+// Get all borrowing records
 async function getBorrowings() {
 
     return await apiRequest("/api/borrowings", {
@@ -30,7 +31,7 @@ async function getBorrowings() {
 
 }
 
-// Retrieve borrowing history for a member
+// Get borrowing records belonging to a member
 async function getMemberBorrowings(memberId) {
 
     return await apiRequest(`/api/borrowings/member/${memberId}`, {
@@ -39,7 +40,7 @@ async function getMemberBorrowings(memberId) {
 
 }
 
-// Retrieve active borrowings for a member
+// Get active borrowing records belonging to a member
 async function getActiveBorrowings(memberId) {
 
     return await apiRequest(`/api/borrowings/member/${memberId}/active`, {
@@ -48,10 +49,4 @@ async function getActiveBorrowings(memberId) {
 
 }
 
-export {
-    borrowBook,
-    returnBook,
-    getBorrowings,
-    getMemberBorrowings,
-    getActiveBorrowings
-};
+export {borrowBook, returnBook, getBorrowings, getMemberBorrowings, getActiveBorrowings};

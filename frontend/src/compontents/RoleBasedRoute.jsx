@@ -5,7 +5,8 @@ import { isAuthenticated, getUserRole } from "../utils/auth";
 function RoleBasedRoute({ allowedRoles, children }) {
 
     // Check authentication
-    if (!isAuthenticated()) {
+    if(!isAuthenticated())
+    {
         return <Navigate to="/login" replace />;
     }
 
@@ -13,7 +14,8 @@ function RoleBasedRoute({ allowedRoles, children }) {
     const userRole = getUserRole();
 
     // Check whether the user's role is allowed
-    if (!allowedRoles.includes(userRole)) {
+    if(!allowedRoles.includes(userRole))
+    {
         return <Navigate to="/dashboard" replace />;
     }
 

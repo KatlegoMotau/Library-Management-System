@@ -22,7 +22,4 @@ async function loginMember(loginData) {
 
 }
 
-export {
-    registerMember,
-    loginMember
-};
+export {registerMember, loginMember};

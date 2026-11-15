@@ -10,16 +10,18 @@ function getUserRole() {
 
     const token = sessionStorage.getItem("token");
 
-    if (!token) {
+    if(!token)
+    {
         throw new Error("You are not logged in. Please log in again.");
     }
 
-    try {
-
+    try
+    {
         // A JWT contains three parts separated by dots
         const tokenParts = token.split(".");
 
-        if (tokenParts.length !== 3) {
+        if(tokenParts.length !== 3)
+        {
             throw new Error("Invalid authentication token.");
         }
 
@@ -49,10 +51,10 @@ function getUserRole() {
 
         return payload.role;
 
-    } catch (error) {
-
+    }
+    catch(error)
+    {
         throw new Error("Could not retrieve your account role. Please log in again.");
-
     }
 }
 
@@ -87,27 +89,29 @@ function Dashboard() {
 
         async function fetchDashboardData() {
 
-            try {
-
+            try
+            {
                 setLoading(true);
                 setError("");
 
                 // Determine the authenticated user's role
                 const userRole = getUserRole();
 
-                if (userRole !== "ADMIN" && userRole !== "MEMBER") {
+                if(userRole !== "ADMIN" && userRole !== "MEMBER")
+                {
                     throw new Error("Your account has an unsupported role.");
                 }
 
-                if (isMounted) {
+                if(isMounted)
+                {
                     setRole(userRole);
                 }
 
                 // Retrieve books for both roles
                 const booksPromise = getBooks();
 
-                if (userRole === "ADMIN") {
-
+                if(userRole === "ADMIN")
+                {
                     // ADMIN can retrieve all library information
                     const [booksData, membersData, borrowingsData] =
                         await Promise.all([
@@ -116,17 +120,17 @@ function Dashboard() {
                             getBorrowings()
                         ]);
 
-                    if (isMounted) {
-
+                    if(isMounted)
+                    {
                         setBooks(booksData);
                         setMembers(membersData);
                         setBorrowings(borrowingsData);
                         setCurrentMember(null);
-
                     }
 
-                } else {
-
+                }
+                else
+                {
                     // MEMBER retrieves only their own profile and borrowings
                     const [booksData, profileData] = await Promise.all([
                         booksPromise,
@@ -137,29 +141,31 @@ function Dashboard() {
                         profileData.id
                     );
 
-                    if (isMounted) {
-
+                    if(isMounted)
+                    {
                         setBooks(booksData);
                         setCurrentMember(profileData);
                         setBorrowings(borrowingsData);
                         setMembers([]);
-
                     }
 
                 }
 
-            } catch (error) {
-
-                if (isMounted) {
+            }
+            catch(error)
+            {
+                if(isMounted)
+                {
                     setError(error.message);
                 }
 
-            } finally {
-
-                if (isMounted) {
+            }
+            finally
+            {
+                if(isMounted)
+                {
                     setLoading(false);
                 }
-
             }
 
         }
@@ -179,11 +185,10 @@ function Dashboard() {
 
         async function fetchBorrowingDetails() {
 
-            if (borrowings.length === 0) {
-
+            if(borrowings.length === 0)
+            {
                 setBorrowingDetails({});
                 return;
-
             }
 
             const details = {};
@@ -202,55 +207,46 @@ function Dashboard() {
                     };
 
                     // Retrieve member details (ADMIN only)
-                    if (role === "ADMIN") {
-
-                        try {
-
-                            const member = await getMemberById(
-                                borrowing.memberId
-                            );
+                    if(role === "ADMIN")
+                    {
+                        try
+                        {
+                            const member = await getMemberById(borrowing.memberId);
 
                             details[borrowing.id].memberName =
                                 `${member.firstName} ${member.lastName}`;
 
-                        } catch (error) {
-
-                            console.warn(
-                                `Could not retrieve member ${borrowing.memberId}:`,
-                                error.message
-                            );
-
                         }
-
+                        catch (error)
+                        {
+                            console.warn(`Could not retrieve member ${borrowing.memberId}:`, error.message);
+                        }
                     }
 
                     // Retrieve book details
-                    try {
-
+                    try
+                    {
                         const book = await getBookById(borrowing.bookId);
 
                         details[borrowing.id].bookTitle = book.title;
 
-                    } catch (error) {
-
-                        console.warn(
-                            `Could not retrieve book ${borrowing.bookId}:`,
-                            error.message
-                        );
-
                     }
-
+                    catch (error)
+                    {
+                        console.warn(`Could not retrieve book ${borrowing.bookId}:`, error.message);
+                    }
                 })
 
             );
 
-            if (isMounted) {
+            if (isMounted)
+            {
                 setBorrowingDetails(details);
             }
-
         }
 
-        if (role) {
+        if(role)
+        {
             fetchBorrowingDetails();
         }
 
@@ -261,13 +257,11 @@ function Dashboard() {
     }, [borrowings, role, currentMember]);
 
     // Calculate dashboard statistics
-    const activeBorrowings = borrowings.filter(
-        borrowing => borrowing.status === "BORROWED"
-    ).length;
+    const activeBorrowings = borrowings.filter(borrowing => borrowing.status === "BORROWED").length;
 
-    const overdueBorrowings = borrowings.filter(
-        borrowing => borrowing.status === "OVERDUE"
-    ).length;
+    const overdueBorrowings = borrowings.filter(borrowing => borrowing.status === "OVERDUE").length;
+
+    const returnedBoorrwoings = borrowings.filter(borrowing => borrowing.status == "RETURNED").length;
 
     // ADMIN and MEMBER have different statistics
     const statistics = role === "ADMIN"
@@ -285,6 +279,11 @@ function Dashboard() {
             {
                 title: "Active Borrowings",
                 value: activeBorrowings,
+                description: "Books currently borrowed"
+            },
+            {
+                title: "Returned Borrowings",
+                value: returnedBoorrwoings,
                 description: "Books currently borrowed"
             },
             {

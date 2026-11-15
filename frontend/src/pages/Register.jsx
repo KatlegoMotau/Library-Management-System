@@ -40,8 +40,8 @@ function Register() {
             password
         };
 
-        try {
-
+        try
+        {
             // Send registration request to the backend
             const response = await registerMember(memberData);
 
@@ -53,17 +53,17 @@ function Register() {
             setTimeout(() => {
                 navigate("/login");
             }, 2000);
-
-        } catch (err) {
-
+        }
+        catch(err)
+        {
             console.error("Registration failed:", err);
 
             setError(err.message || "Registration failed. Please try again.");
 
-        } finally {
-
+        }
+        finally
+        {
             setLoading(false);
-
         }
 
     };
