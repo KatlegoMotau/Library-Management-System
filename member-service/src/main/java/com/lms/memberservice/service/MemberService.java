@@ -33,29 +33,31 @@ public class MemberService {
         this.jwtService = jwtService;
     }
 
-
     // Login a member
     public String login(LoginRequestDTO loginRequestDTO) {
 
         Member member = memberRepository.findByEmail(loginRequestDTO.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        // Checks whether the member is active
-        if(!member.isStatus())
+        // Verify the submitted password first
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), member.getPassword()))
         {
             throw new BadCredentialsException("Invalid email or password");
         }
 
-        // Verify the submitted password
-        if(!passwordEncoder.matches(loginRequestDTO.getPassword(), member.getPassword()))
+        // Check whether the member's account is active
+        if(!member.isStatus())
         {
-            throw new BadCredentialsException("Invalid email or password");
+            throw new BadCredentialsException(
+                    "Your account has been deactivated. Please contact the library administrator for assistance.");
         }
 
         // Generate JWT token
-        return jwtService.generateToken(member.getEmail(), member.getRole().name());
+        return jwtService.generateToken(
+                member.getEmail(),
+                member.getRole().name()
+        );
     }
-
 
     // Generate a unique membership number
     private String generateMemberNumber() {
@@ -67,7 +69,6 @@ public class MemberService {
             int number = random.nextInt(1_000_000);
 
             memberNumber = String.format("MEM%06d", number);
-
         }
         while (memberRepository.existsByMemberNumber(memberNumber));
 

@@ -67,6 +67,30 @@ public class BorrowingService {
     // Borrows a book
     public BorrowingResponseDTO borrowBook(BorrowingRequestDTO requestDTO, String token) {
 
+        // Gets today's date
+        LocalDate borrowingDate = LocalDate.now();
+
+        // Gets the due date selected by the member
+        LocalDate dueDate = requestDTO.getDueDate();
+
+        // Validates that a due date was provided
+        if(dueDate == null)
+        {
+            throw new IllegalArgumentException("Due date is required");
+        }
+
+        // Ensures the due date is in the future
+        if(!dueDate.isAfter(borrowingDate))
+        {
+            throw new IllegalArgumentException("Due date must be after today's date");
+        }
+
+        // Ensures the borrowing period does not exceed 14 days
+        if(dueDate.isAfter(borrowingDate.plusDays(14)))
+        {
+            throw new IllegalArgumentException("Borrowing period cannot exceed 14 days");
+        }
+
         // Checks whether the member exists
         MemberResponseDTO member = memberClient.getMemberById(requestDTO.getMemberId(), token);
 
@@ -85,16 +109,17 @@ public class BorrowingService {
         List<BorrowingStatus> activeStatuses = List.of(BorrowingStatus.BORROWED, BorrowingStatus.OVERDUE);
 
         // Checks the member's active borrowing count
-        long activeBorrowings =
-                borrowingRepository.countByMemberIdAndStatusIn(requestDTO.getMemberId(), activeStatuses);
+        long activeBorrowings = borrowingRepository.countByMemberIdAndStatusIn(requestDTO.getMemberId(), activeStatuses);
 
         if(activeBorrowings >= 3)
         {
-            throw new BorrowingLimitException("Member has reached the maximum limit of 3 active borrowings");
+            throw new BorrowingLimitException(
+                    "Member has reached the maximum limit of 3 active borrowings");
         }
 
         // Checks whether the book exists and has available copies
-        BookResponseDTO book = bookClient.getBookAvailability(requestDTO.getBookId(), token);
+        BookResponseDTO book =
+                bookClient.getBookAvailability(requestDTO.getBookId(), token);
 
         if(book == null)
         {
@@ -115,10 +140,11 @@ public class BorrowingService {
         // Creates the borrowing record
         Borrowing borrowing = BorrowingMapper.toModel(requestDTO);
 
-        LocalDate borrowingDate = LocalDate.now();
-
         borrowing.setBorrowingDate(borrowingDate);
-        borrowing.setDueDate(borrowingDate.plusDays(14));
+
+        // Uses the due date selected by the member
+        borrowing.setDueDate(dueDate);
+
         borrowing.setStatus(BorrowingStatus.BORROWED);
 
         // Saves the borrowing record
@@ -127,7 +153,6 @@ public class BorrowingService {
             Borrowing savedBorrowing = borrowingRepository.save(borrowing);
 
             return BorrowingMapper.toDTO(savedBorrowing);
-
         }
         catch(RuntimeException exception)
         {
@@ -136,7 +161,6 @@ public class BorrowingService {
             try
             {
                 bookClient.returnCopy(requestDTO.getBookId(), token);
-
             }
             catch(RuntimeException compensationException)
             {
@@ -159,8 +183,7 @@ public class BorrowingService {
     // MEMBER: Return only their own borrowing record
     public BorrowingResponseDTO returnBook(Long borrowingId, Long memberId, String token) {
 
-        Borrowing borrowing = borrowingRepository.findById(borrowingId)
-                .orElseThrow(() ->
+        Borrowing borrowing = borrowingRepository.findById(borrowingId).orElseThrow(() ->
                         new IllegalArgumentException("Borrowing record not found with ID: " + borrowingId));
 
         // Verify that this borrowing belongs to the authenticated member
@@ -228,8 +251,7 @@ public class BorrowingService {
     // Gets a borrowing record by ID
     public BorrowingResponseDTO getBorrowingById(Long id) {
 
-        Borrowing borrowing = borrowingRepository.findById(id)
-                .orElseThrow(() ->
+        Borrowing borrowing = borrowingRepository.findById(id).orElseThrow(() ->
                         new IllegalArgumentException("Borrowing record not found with ID: " + id));
 
         return BorrowingMapper.toDTO(borrowing);

@@ -64,7 +64,7 @@ public class BookService {
                 new BookNotFoundException("Book not found with id " + id));
 
         // Checks whether another book already uses this ISBN.
-        if (bookRepository.existsByIsbnAndIdNot(bookRequestDTO.getIsbn(), id))
+        if(bookRepository.existsByIsbnAndIdNot(bookRequestDTO.getIsbn(), id))
         {
             throw new IsbnAlreadyExistException("A book with this ISBN already exists: " + bookRequestDTO.getIsbn());
         }
@@ -73,7 +73,7 @@ public class BookService {
         int borrowedCopies = existingBook.getTotalCopies() - existingBook.getAvailableCopies();
 
         // Prevents reducing total copies below borrowed copies
-        if (bookRequestDTO.getTotalCopies() < borrowedCopies)
+        if(bookRequestDTO.getTotalCopies() < borrowedCopies)
         {
             throw new IllegalArgumentException("Total copies cannot be less than the number of borrowed copies: " + borrowedCopies);
         }

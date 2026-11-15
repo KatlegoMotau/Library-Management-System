@@ -44,7 +44,8 @@ function Admin() {
 
         async function fetchMembers() {
 
-            try {
+            try
+            {
                 setLoading(true);
                 setError("");
 
@@ -56,10 +57,13 @@ function Admin() {
                 }));
 
                 setMembers(formattedMembers);
-
-            } catch (error) {
+            }
+            catch(error)
+            {
                 setError(error.message);
-            } finally {
+            }
+            finally
+            {
                 setLoading(false);
             }
         }
@@ -74,17 +78,21 @@ function Admin() {
 
         async function fetchBooks() {
 
-            try {
+            try
+            {
                 setBooksLoading(true);
                 setBooksError("");
 
                 const data = await getBooks();
 
                 setBooks(data);
-
-            } catch (error) {
+            }
+            catch(error)
+            {
                 setBooksError(error.message);
-            } finally {
+            }
+            finally
+            {
                 setBooksLoading(false);
             }
 
@@ -100,7 +108,8 @@ function Admin() {
 
         async function fetchBorrowings() {
 
-            try {
+            try
+            {
                 setBorrowingsLoading(true);
                 setBorrowingsError("");
 
@@ -108,9 +117,13 @@ function Admin() {
 
                 setBorrowings(data);
 
-            } catch (error) {
+            }
+            catch(error)
+            {
                 setBorrowingsError(error.message);
-            } finally {
+            }
+            finally
+            {
                 setBorrowingsLoading(false);
             }
         }
@@ -124,7 +137,8 @@ function Admin() {
 
         async function fetchBorrowingDetails() {
 
-            if (borrowings.length === 0) {
+            if(borrowings.length === 0)
+            {
                 setBorrowingDetails({});
                 return;
             }
@@ -143,37 +157,30 @@ function Admin() {
                     };
 
                     // Retrieve member information independently
-                    try {
-
+                    try
+                    {
                         const member = await getMemberById(borrowing.memberId);
 
-                        details[borrowing.id].memberName =
-                            `${member.firstName} ${member.lastName}`;
+                        details[borrowing.id].memberName = `${member.firstName} ${member.lastName}`;
 
-                    } catch (error) {
-
-                        console.error(
-                            `Could not retrieve member ${borrowing.memberId}:`,
-                            error
-                        );
-
+                    }
+                    catch(error)
+                    {
+                        console.error(`Could not retrieve member ${borrowing.memberId}:`, error);
                     }
 
                     // Retrieve book information independently
-                    try {
-
+                    try
+                    {
                         const book = await getBookById(borrowing.bookId);
 
                         details[borrowing.id].bookTitle = book.title;
                         details[borrowing.id].bookAuthor = book.author;
+                    }
+                    catch(error)
+                    {
 
-                    } catch (error) {
-
-                        console.error(
-                            `Could not retrieve book ${borrowing.bookId}:`,
-                            error
-                        );
-
+                        console.error(`Could not retrieve book ${borrowing.bookId}:`, error);
                     }
 
                 })
@@ -192,15 +199,10 @@ function Admin() {
     // Calculate book statistics using backend data
     const totalBooks = books.length;
 
-    const totalCopies = books.reduce(
-        (total, book) => total + (book.totalCopies || 0),
-        0
-    );
+    const totalCopies = books.reduce((total, book) => total + (book.totalCopies || 0), 0);
 
     const availableCopies = books.reduce(
-        (total, book) => total + (book.availableCopies || 0),
-        0
-    );
+        (total, book) => total + (book.availableCopies || 0), 0);
 
     // Calculate dashboard statistics using backend data
     const statistics = [
@@ -252,20 +254,25 @@ function Admin() {
     // Activate or deactivate a member through the backend
     const toggleMemberStatus = async (memberId) => {
 
-        try {
+        try
+        {
             setActionError("");
 
             const member = members.find((item) => item.id === memberId);
 
-            if (!member) {
+            if(!member)
+            {
                 return;
             }
 
             let updatedMember;
 
-            if (member.status === "ACTIVE") {
+            if(member.status === "ACTIVE")
+            {
                 updatedMember = await deactivateMember(memberId);
-            } else {
+            }
+            else
+            {
                 updatedMember = await activateMember(memberId);
             }
 
@@ -286,7 +293,9 @@ function Admin() {
                     : currentSelected
             );
 
-        } catch (error) {
+        }
+        catch (error)
+        {
             setActionError(error.message);
         }
 

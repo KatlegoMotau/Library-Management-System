@@ -17,7 +17,8 @@ function BookForm({ book, onSubmit, onCancel }) {
         const { name, value } = event.target;
 
         // Only allow digits in the ISBN field
-        if (name === "isbn" && !/^\d*$/.test(value)) {
+        if(name === "isbn" && !/^\d*$/.test(value))
+        {
             return;
         }
 

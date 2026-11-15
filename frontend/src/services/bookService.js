@@ -74,13 +74,4 @@ async function returnCopy(id) {
 
 }
 
-export {
-    getBooks,
-    getBookById,
-    createBook,
-    updateBook,
-    deleteBook,
-    checkAvailability,
-    borrowCopy,
-    returnCopy
-};
+export {getBooks, getBookById, createBook, updateBook, deleteBook, checkAvailability, borrowCopy, returnCopy};

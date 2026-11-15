@@ -3,6 +3,8 @@ package com.lms.borrowingservice.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+import java.time.LocalDate;
+
 public class BorrowingRequestDTO {
 
     private Long memberId;
@@ -11,12 +13,16 @@ public class BorrowingRequestDTO {
     @Positive(message = "Book ID must be a positive number")
     private Long bookId;
 
+    @NotNull(message = "Due date is required")
+    private LocalDate dueDate;
+
     public BorrowingRequestDTO() {
     }
 
-    public BorrowingRequestDTO(Long memberId, Long bookId) {
+    public BorrowingRequestDTO(Long memberId, Long bookId, LocalDate dueDate) {
         this.memberId = memberId;
         this.bookId = bookId;
+        this.dueDate = dueDate;
     }
 
     public Long getMemberId() {
@@ -34,5 +40,12 @@ public class BorrowingRequestDTO {
     public void setBookId(Long bookId) {
         this.bookId = bookId;
     }
-}
 
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+}

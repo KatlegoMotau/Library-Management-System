@@ -10,6 +10,9 @@ function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    // Controls password visibility
+    const [showPassword, setShowPassword] = useState(false);
+
     // Tracks login status
     const [loading, setLoading] = useState(false);
 
@@ -24,13 +27,10 @@ function Login() {
         setLoading(true);
 
         // Data expected by LoginRequestDTO
-        const loginData = {
-            email,
-            password
-        };
+        const loginData = {email, password};
 
-        try {
-
+        try
+        {
             // Send login request to the backend
             const token = await loginMember(loginData);
 
@@ -42,16 +42,16 @@ function Login() {
             // Navigate to dashboard
             navigate("/dashboard");
 
-        } catch (err) {
-
+        }
+        catch (err)
+        {
             console.error("Login failed:", err);
 
             setError(err.message || "Invalid email or password.");
-
-        } finally {
-
+        }
+        finally
+        {
             setLoading(false);
-
         }
 
     };
@@ -117,16 +117,28 @@ function Login() {
                             Password
                         </label>
 
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                            placeholder="Enter your password"
-                            required
-                            disabled={loading}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-400 outline-none focus:border-black focus:ring-1 focus:ring-black transition duration-200"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                                placeholder="Enter your password"
+                                required
+                                disabled={loading}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-400 outline-none focus:border-black focus:ring-1 focus:ring-black transition duration-200"
+                            />
+
+                            {/* Show / Hide password */}
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                disabled={loading}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-600 hover:text-black"
+                            >
+                                {showPassword ? "Hide" : "Show"}
+                            </button>
+                        </div>
 
                     </div>
 
