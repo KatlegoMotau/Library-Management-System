@@ -1,0 +1,85 @@
+services:
+
+  member-service:
+    build:
+      context: ./member-service
+      dockerfile: Dockerfile
+    container_name: lms-member-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/member_db
+      SPRING_DATASOURCE_USERNAME: postgres
+    ports:
+      - "8081:8081"
+      - "9091:9091"
+    networks:
+      - lms-network
+
+  book-service:
+    build:
+      context: ./book-service
+      dockerfile: Dockerfile
+    container_name: lms-book-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/book_db
+      SPRING_DATASOURCE_USERNAME: postgres
+    ports:
+      - "8082:8082"
+      - "9092:9092"
+    networks:
+      - lms-network
+
+  borrowing-service:
+    build:
+      context: ./borrowing-service
+      dockerfile: Dockerfile
+    container_name: lms-borrowing-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/borrowing_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      MEMBER_SERVICE_URL: http://member-service:8081
+      BOOK_SERVICE_URL: http://book-service:8082
+      SPRING_GRPC_CLIENT_CHANNEL_MEMBER_TARGET: static://member-service:9091
+      SPRING_GRPC_CLIENT_CHANNEL_BOOK_TARGET: static://book-service:9092
+    ports:
+      - "8083:8083"
+    depends_on:
+      - member-service
+      - book-service
+    networks:
+      - lms-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: lms-api-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_URI: http://book-service:8082
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_PREDICATES_0: "Path=/api/books/**"
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_1_URI: http://member-service:8081
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_1_PREDICATES_0: "Path=/api/members/**"
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_2_URI: http://borrowing-service:8083
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_2_PREDICATES_0: "Path=/api/borrowings/**"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - member-service
+      - book-service
+      - borrowing-service
+    networks:
+      - lms-network
+
+networks:
+  lms-network:
+    external: true
+    name: lms-network

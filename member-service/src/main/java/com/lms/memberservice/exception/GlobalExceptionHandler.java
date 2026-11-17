@@ -1,5 +1,7 @@
 package com.lms.memberservice.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +17,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Handles member not found exceptions
     @ExceptionHandler(MemberNotFoundException.class)
@@ -96,6 +100,8 @@ public class GlobalExceptionHandler {
     // Handles unexpected exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception exception) {
+
+        logger.error("An unexpected error occurred: ", exception);
 
         Map<String, Object> response = new HashMap<>();
 
