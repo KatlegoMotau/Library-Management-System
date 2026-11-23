@@ -1,4 +1,4 @@
-function BookCard({book, role, onEdit, onDelete, onBorrow}) {
+function BookCard({book, role, onEdit, onDelete, onBorrow, onRestore}) {
 
     return (
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
@@ -85,6 +85,13 @@ function BookCard({book, role, onEdit, onDelete, onBorrow}) {
                         Delete
                     </button>
 
+                    <button
+                        type="button"
+                        onClick={() => onRestore(book.id)}
+                        className="text-sm font-semibold text-gray-500 hover:text-black hover:underline"
+                    >
+                        Restore Previous Details
+                    </button>
                 </div>
 
             )}

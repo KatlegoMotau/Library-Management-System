@@ -1,6 +1,8 @@
 package com.lms.bookservice.dto;
 
-public class BookResponseDTO {
+import java.io.Serializable;
+
+public class BookResponseDTO implements Serializable {
 
     private Long id;
     private String title;

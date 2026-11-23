@@ -27,9 +27,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/books", "/api/books/*", "/api/books/availability/*"
                         ).hasAnyRole("ADMIN", "MEMBER")
 
-                        // ADMIN can create, update and delete books
-                        .requestMatchers("/api/books/create", "/api/books/update/**",
-                                "/api/books/delete/**").hasRole("ADMIN")
+                        // ADMIN can create, update, delete and restore books
+                        .requestMatchers("/api/books/create","/api/books/update/**",
+                                "/api/books/delete/**","/api/books/restore/**").hasRole("ADMIN")
 
                         // Internal inventory operations are not public
                         .requestMatchers("/api/books/borrow-copy/**",
