@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import {
-    getBooks,
-    createBook,
-    updateBook,
-    deleteBook
-} from "../services/bookService";
+import {getBooks, createBook, updateBook, deleteBook, restorePreviousDetails} from "../services/bookService";
 
 import { borrowBook } from "../services/borrowingService";
 import { getUserRole } from "../utils/auth";
@@ -114,6 +109,28 @@ function Books() {
 
             const updatedBooks = await getBooks();
             setBooks(updatedBooks);
+        }
+        catch (error)
+        {
+            setError(error.message);
+        }
+
+    };
+
+    // Restore the previous details of a book
+    const handleRestoreBook = async (bookId) => {
+
+        try
+        {
+            setError("");
+
+            await restorePreviousDetails(bookId);
+
+            // Retrieve the updated book list
+            const updatedBooks = await getBooks();
+
+            setBooks(updatedBooks);
+
         }
         catch (error)
         {
@@ -530,6 +547,7 @@ function Books() {
                                     onBorrow={handleBorrowBook}
                                     onEdit={handleEditBook}
                                     onDelete={handleDeleteBook}
+                                    onRestore={handleRestoreBook}
                                 />
 
                             ))

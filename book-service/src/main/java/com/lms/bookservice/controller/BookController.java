@@ -51,6 +51,15 @@ public class BookController {
         return ResponseEntity.ok().body(bookResponseDTO);
     }
 
+    // Restore previous book details
+    @PostMapping("/restore/{id}")
+    public ResponseEntity<BookResponseDTO> restorePreviousDetails(@PathVariable Long id) {
+
+        BookResponseDTO bookResponseDTO = bookService.restorePreviousDetails(id);
+
+        return ResponseEntity.ok().body(bookResponseDTO);
+    }
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
 

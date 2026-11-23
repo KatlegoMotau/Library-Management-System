@@ -38,6 +38,15 @@ async function updateBook(id, bookData) {
 
 }
 
+// Restore previous book details
+async function restorePreviousDetails(id) {
+
+    return await apiRequest(`/api/books/restore/${id}`, {
+        method: "POST"
+    });
+
+}
+
 // Delete a book
 async function deleteBook(id) {
 
@@ -74,4 +83,4 @@ async function returnCopy(id) {
 
 }
 
-export {getBooks, getBookById, createBook, updateBook, deleteBook, checkAvailability, borrowCopy, returnCopy};
+export {getBooks, getBookById, createBook, updateBook, restorePreviousDetails, deleteBook, checkAvailability, borrowCopy, returnCopy};
