@@ -90,7 +90,7 @@ function BookCard({book, role, onEdit, onDelete, onBorrow, onRestore}) {
                         onClick={() => onRestore(book.id)}
                         className="text-sm font-semibold text-gray-500 hover:text-black hover:underline"
                     >
-                        Restore Previous Details
+                        Restore
                     </button>
                 </div>
 

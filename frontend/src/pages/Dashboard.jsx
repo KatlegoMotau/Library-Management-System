@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import LiveActivity from "../compontents/LiveActivity.jsx";
 
 import StatisticsCard from "../compontents/StatisticsCard.jsx";
 import { getBooks, getBookById } from "../services/bookService.js";
@@ -351,6 +352,13 @@ function Dashboard() {
                 loading={loading}
                 error={error}
             />
+
+            {/* Live activity - ADMIN only */}
+            {role === "ADMIN" && !loading && !error && (
+
+                <LiveActivity />
+
+            )}
 
             {/* Recent borrowings */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
