@@ -7,7 +7,9 @@ import com.lms.borrowingservice.client.dto.MemberResponseDTO;
 import com.lms.borrowingservice.dto.BorrowingRequestDTO;
 import com.lms.borrowingservice.dto.BorrowingResponseDTO;
 import com.lms.borrowingservice.enums.BorrowingStatus;
+import com.lms.borrowingservice.event.BookBorrowedEvent;
 import com.lms.borrowingservice.exception.*;
+import com.lms.borrowingservice.kafka.BorrowingEventProducer;
 import com.lms.borrowingservice.mapper.BorrowingMapper;
 import com.lms.borrowingservice.model.Borrowing;
 import com.lms.borrowingservice.repository.BorrowingRepository;
@@ -22,11 +24,13 @@ public class BorrowingService {
     private final BorrowingRepository borrowingRepository;
     private final MemberClient memberClient;
     private final BookClient bookClient;
+    private final BorrowingEventProducer borrowingEventProducer;
 
-    public BorrowingService(BorrowingRepository borrowingRepository, MemberClient memberClient, BookClient bookClient) {
+    public BorrowingService(BorrowingRepository borrowingRepository, MemberClient memberClient, BookClient bookClient, BorrowingEventProducer borrowingEventProducer) {
         this.borrowingRepository = borrowingRepository;
         this.memberClient = memberClient;
         this.bookClient = bookClient;
+        this.borrowingEventProducer = borrowingEventProducer;
     }
 
     // Verifies that a member owns the borrowing record
@@ -45,12 +49,14 @@ public class BorrowingService {
         List<BorrowingStatus> activeStatuses = List.of(BorrowingStatus.BORROWED, BorrowingStatus.OVERDUE);
 
         // Retrieves the member's active borrowing records
-        List<Borrowing> activeBorrowings = borrowingRepository.findByMemberIdAndStatusIn(memberId, activeStatuses);
+        List<Borrowing> activeBorrowings =
+                borrowingRepository.findByMemberIdAndStatusIn(memberId, activeStatuses);
 
         // Checks the ISBN of each book already borrowed
         for(Borrowing existingBorrowing : activeBorrowings)
         {
-            BookResponseDTO existingBook = bookClient.getBookAvailability(existingBorrowing.getBookId(), token);
+            BookResponseDTO existingBook =
+                    bookClient.getBookAvailability(existingBorrowing.getBookId(), token);
 
             // Compares ISBNs, ignoring spaces and hyphens
             String existingIsbn = existingBook.getIsbn().replaceAll("[\\s-]", "");
@@ -86,7 +92,7 @@ public class BorrowingService {
         }
 
         // Ensures the borrowing period does not exceed 14 days
-        if(dueDate.isAfter(borrowingDate.plusDays(14)))
+        if (dueDate.isAfter(borrowingDate.plusDays(14)))
         {
             throw new IllegalArgumentException("Borrowing period cannot exceed 14 days");
         }
@@ -109,17 +115,16 @@ public class BorrowingService {
         List<BorrowingStatus> activeStatuses = List.of(BorrowingStatus.BORROWED, BorrowingStatus.OVERDUE);
 
         // Checks the member's active borrowing count
-        long activeBorrowings = borrowingRepository.countByMemberIdAndStatusIn(requestDTO.getMemberId(), activeStatuses);
+        long activeBorrowings =
+                borrowingRepository.countByMemberIdAndStatusIn(requestDTO.getMemberId(), activeStatuses);
 
         if(activeBorrowings >= 3)
         {
-            throw new BorrowingLimitException(
-                    "Member has reached the maximum limit of 3 active borrowings");
+            throw new BorrowingLimitException("Member has reached the maximum limit of 3 active borrowings");
         }
 
         // Checks whether the book exists and has available copies
-        BookResponseDTO book =
-                bookClient.getBookAvailability(requestDTO.getBookId(), token);
+        BookResponseDTO book = bookClient.getBookAvailability(requestDTO.getBookId(), token);
 
         if(book == null)
         {
@@ -148,11 +153,11 @@ public class BorrowingService {
         borrowing.setStatus(BorrowingStatus.BORROWED);
 
         // Saves the borrowing record
+        Borrowing savedBorrowing;
+
         try
         {
-            Borrowing savedBorrowing = borrowingRepository.save(borrowing);
-
-            return BorrowingMapper.toDTO(savedBorrowing);
+            savedBorrowing = borrowingRepository.save(borrowing);
         }
         catch(RuntimeException exception)
         {
@@ -161,6 +166,7 @@ public class BorrowingService {
             try
             {
                 bookClient.returnCopy(requestDTO.getBookId(), token);
+
             }
             catch(RuntimeException compensationException)
             {
@@ -169,6 +175,16 @@ public class BorrowingService {
 
             throw exception;
         }
+
+        // Creates the borrowing event after saving the record
+        BookBorrowedEvent event = new BookBorrowedEvent(
+                savedBorrowing.getId(), savedBorrowing.getBookId(), savedBorrowing.getMemberId());
+
+        // Publishes the event to Kafka
+        borrowingEventProducer.publishBookBorrowedEvent(event);
+
+        // Returns the borrowing response
+        return BorrowingMapper.toDTO(savedBorrowing);
     }
 
     // ADMIN: Return any borrowing record
@@ -276,8 +292,8 @@ public class BorrowingService {
         LocalDate today = LocalDate.now();
 
         // Finds borrowed books whose due dates have passed
-        List<Borrowing> overdueBorrowings = borrowingRepository.findByStatusAndDueDateBefore(
-                BorrowingStatus.BORROWED, today);
+        List<Borrowing> overdueBorrowings =
+                borrowingRepository.findByStatusAndDueDateBefore(BorrowingStatus.BORROWED, today);
 
         // Updates their statuses
         for(Borrowing borrowing : overdueBorrowings)

@@ -21,6 +21,9 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
+                        // WebSocket handshake
+                        .requestMatchers("/ws", "/ws/**").permitAll()
+
                         // ADMIN can view all borrowing records
                         .requestMatchers(HttpMethod.GET, "/api/borrowings")
                         .hasRole("ADMIN")
@@ -38,7 +41,6 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "MEMBER")
 
                         // ADMIN and MEMBER can access individual records
-                        // Ownership is checked in BorrowingController
                         .requestMatchers(HttpMethod.GET, "/api/borrowings/**")
                         .hasAnyRole("ADMIN", "MEMBER")
 

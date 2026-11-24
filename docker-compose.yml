@@ -45,6 +45,38 @@ services:
     networks:
       - lms-network
 
+  # Apache Kafka
+  kafka:
+    image: apache/kafka:4.1.1
+    container_name: lms-kafka
+    restart: unless-stopped
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
+
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+    networks:
+      - lms-network
+
   # Borrowing Service
   borrowing-service:
     build:
@@ -58,6 +90,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/borrowing_db
       SPRING_DATASOURCE_USERNAME: postgres
       REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MEMBER_SERVICE_URL: http://member-service:8081
       BOOK_SERVICE_URL: http://book-service:8082
       SPRING_GRPC_CLIENT_CHANNEL_MEMBER_TARGET: static://member-service:9091
@@ -67,6 +100,7 @@ services:
     depends_on:
       - member-service
       - book-service
+      - kafka
     networks:
       - lms-network
 
@@ -93,6 +127,11 @@ services:
     networks:
       - lms-network
 
+# Persistent Kafka storage
+volumes:
+  kafka-data:
+
+# Docker Network
 networks:
   lms-network:
     external: true
